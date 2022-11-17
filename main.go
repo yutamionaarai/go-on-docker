@@ -16,7 +16,6 @@ func main() {
 
 	r.GET("todos/:id", func(c *gin.Context) {
 		id := c.Param("id")
-
 		log.Printf(id)
 		c.JSON(200, gin.H{
 			"message": "ok",
