@@ -2,12 +2,24 @@ package main
 
 import (
 	"fmt"
-	"net/http"
+	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	r := gin.Default()
+	r.GET("/", func(c *gin.Context) {
+		w := c.Writer
 		fmt.Fprintf(w, "Hello, World")
 	})
-	http.ListenAndServe(":8080", nil)
+
+	r.GET("todos/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		log.Printf(id)
+		c.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
+	r.Run()
 }
