@@ -13,23 +13,23 @@ import (
 )
 
 type User struct {
-	ID        int64     `json:"id" gorm:"primaryKey"`
-	Name      string    `json:"name"`
-	Todos     []Todo    `json:"todos" gorm:"foreignKey:UserRefer"`
-	CreatedAT time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64
+	Name      string
+	Todos     []Todo
+	CreatedAT time.Time
+	UpdatedAt time.Time
 }
 
 type Todo struct {
-	ID             int64     `json:"id" gorm:"primaryKey"`
-	Title          string    `json:"title"`
-	Description    string    `json:"description"`
-	Status         string    `json:"status"`
-	Priority       int64     `json:"priority"`
-	ExpirationDate time.Time `json:"expiration_date"`
-	UserID         int64     `json:"user_id"`
-	CreatedAT      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID             int64
+	Title          string
+	Description    string
+	Status         string
+	Priority       int64
+	ExpirationDate time.Time
+	UserID         int64
+	CreatedAT      time.Time
+	UpdatedAt      time.Time
 }
 
 func main() {
@@ -43,6 +43,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("failed to open DB", err)
 	}
+
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
 		w := c.Writer
@@ -51,9 +52,13 @@ func main() {
 
 	r.GET("todos/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		var todos []map[string]interface{}
-		db.Table("todos").Find(&todos, "id = ?", id)
-		fmt.Print(todos)
+
+		var todo Todo
+		err := db.First(&todo, id).Error
+		if err != nil {
+			fmt.Print(err)
+		}
+		fmt.Print(todo)
 		c.JSON(200, gin.H{
 			"message": "ok",
 		})
