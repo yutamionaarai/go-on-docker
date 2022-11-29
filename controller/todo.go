@@ -5,9 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
-
-	"app/service"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -23,10 +20,10 @@ func Hello() gin.HandlerFunc {
 // todoリストを全件取得
 func FindTodosController(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var todos *[]model.Todo
-		todos, err := service.FindTodos(db, todos)
+		var todos []model.Todo
+		err := db.Find(&todos).Error
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{})
+			c.JSON(http.StatusInternalServerError, gin.H{})
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"data": todos,
@@ -36,13 +33,13 @@ func FindTodosController(db *gorm.DB) gin.HandlerFunc {
 
 func FindTodoController(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-		var todo *model.Todo
-		todo, err := service.FirstTodo(db, todo, id)
+		id := c.Param("id")
+		var todo model.Todo
+		err := db.First(&todo, id).Error
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{})
+			c.JSON(http.StatusInternalServerError, gin.H{})
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"data": todo,
 		})
 	}
@@ -54,7 +51,7 @@ func CreateTodoController(db *gorm.DB) gin.HandlerFunc {
 		var todoRequest model.Todo
 		err := c.BindJSON(&todoRequest)
 		if err != nil {
-			fmt.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
 		}
 		if err := db.First(&user, todoRequest.UserID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -68,7 +65,7 @@ func CreateTodoController(db *gorm.DB) gin.HandlerFunc {
 			Status: todoRequest.Status, Priority: todoRequest.Priority, ExpirationDate: todoRequest.ExpirationDate}
 
 		if err := db.Create(&todo).Error; err != nil {
-			fmt.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
 		}
 		c.JSON(http.StatusOK, gin.H{"data": gin.H{
 			"id": todo.ID,
@@ -77,16 +74,17 @@ func CreateTodoController(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func D(db *gorm.DB) gin.HandlerFunc {
+func UpdateTodoController(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var todoRequest model.Todo
 		err := c.BindJSON(&todoRequest)
 		if err != nil {
-			fmt.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
 		}
 		var todo model.Todo
-		if err = db.First(&todo, id).Error; err != nil {
+		if err := db.First(&todo, id).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{})
 			} else {
@@ -97,7 +95,8 @@ func D(db *gorm.DB) gin.HandlerFunc {
 		updateTodo := model.Todo{Title: todoRequest.Title, Description: todo.Description,
 			Status: todo.Status, Priority: todoRequest.Priority, ExpirationDate: todo.ExpirationDate}
 		if err := db.Model(&todo).Updates(updateTodo).Error; err != nil {
-			fmt.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
 		}
 		c.JSON(http.StatusOK, gin.H{"data": gin.H{
 			"id": todo.ID,
@@ -107,13 +106,22 @@ func D(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func E(db *gorm.DB) gin.HandlerFunc {
+func DeleteTodoController(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var todo model.Todo
-		err := db.Delete(&todo, id)
+		if err := db.First(&todo, id).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{})
+			}
+			return
+		}
+		err := db.Delete(&todo, id).Error
 		if err != nil {
-			fmt.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
 		}
 		c.JSON(http.StatusNoContent, gin.H{})
 

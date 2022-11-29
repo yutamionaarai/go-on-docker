@@ -17,8 +17,8 @@ func NewRouter(db *gorm.DB) *gin.Engine {
 	// todoリストの作成
 	r.POST("todos/", controller.CreateTodoController(db))
 	// 該当のIDのtodoリストの更新
-	r.PUT("todos/:id", controller.D(db))
+	r.PUT("todos/:id", controller.UpdateTodoController(db))
 	// 該当のIDのtodoリストの削除
-	r.DELETE("todos/:id", controller.E(db))
+	r.DELETE("todos/:id", controller.DeleteTodoController(db))
 	return r
 }
