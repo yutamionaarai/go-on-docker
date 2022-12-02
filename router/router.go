@@ -2,6 +2,7 @@ package router
 
 import (
 	"app/controller"
+	"app/middleware"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -9,16 +10,22 @@ import (
 
 func NewRouter(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
-	r.GET("/", controller.Hello())
-	// todoリストを全件取得
-	r.GET("/todos", controller.FindTodosController(db))
-	// 該当のIDのtodoリストを取得
-	r.GET("todos/:id", controller.FindTodoController(db))
-	// todoリストの作成
-	r.POST("todos/", controller.CreateTodoController(db))
-	// 該当のIDのtodoリストの更新
-	r.PUT("todos/:id", controller.UpdateTodoController(db))
-	// 該当のIDのtodoリストの削除
-	r.DELETE("todos/:id", controller.DeleteTodoController(db))
+	todoController := controller.NewTodoController(db)
+	r.Use(middleware.HandleErrors)
+	r.GET("/", todoController.HelloController)
+
+	todos := r.Group("/todos")
+	{
+		// todoリストを全件取得
+		todos.GET("/", todoController.FindTodosController)
+		// 該当のIDのtodoリストを取得
+		todos.GET("/:id", todoController.FindTodoController)
+		// todoリストの作成
+		todos.POST("/", todoController.CreateTodoController)
+		// 該当のIDのtodoリストの更新
+		todos.PUT("/:id", todoController.UpdateTodoController)
+		// 該当のIDのtodoリストの削除
+		todos.DELETE("/:id", todoController.DeleteTodoController)
+	}
 	return r
 }

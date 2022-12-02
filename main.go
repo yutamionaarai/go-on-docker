@@ -21,5 +21,6 @@ func main() {
 		log.Fatalln("failed to open DB", err)
 	}
 	r := router.NewRouter(db)
+
 	r.Run()
 }
