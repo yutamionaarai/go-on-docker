@@ -2,7 +2,7 @@ package router
 
 import (
 	"app/controller"
-	"app/middleware"
+	"app/controller/middleware"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

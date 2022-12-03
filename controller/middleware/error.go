@@ -6,7 +6,7 @@ import (
 
 func HandleErrors(c *gin.Context) {
 	c.Next()
-	errorToPrint := c.Errors.ByType(gin.ErrorTypeAny).Last()
+	errorToPrint := c.Errors.ByType(gin.ErrorTypePublic).Last()
 	if errorToPrint != nil {
 		statusCode := errorToPrint.Meta.(int)
 		errMsg := errorToPrint.Error()
