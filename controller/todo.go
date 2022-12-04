@@ -79,7 +79,7 @@ func (t *TodoController) CreateTodoController(c *gin.Context) {
 	todo := model.Todo{UserID: user.ID, Title: todoRequest.Title, Description: todoRequest.Description,
 		Status: todoRequest.Status, Priority: todoRequest.Priority, ExpirationDate: todoRequest.ExpirationDate}
 
-	if err := t.db.Create(&todo).Error; err != nil {
+	if err := t.db.Omit("created_at", "updated_at").Create(&todo).Error; err != nil {
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(500)
 		return
 	}
@@ -98,13 +98,12 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(400)
 		return
 	}
-
 	if err := todoRequest.TodoValidate(c); err != nil {
 		return
 	}
 
-	var todo model.Todo
-	if err := t.db.First(&todo, id).Error; err != nil {
+	var fetchedTodo model.Todo
+	if err := t.db.First(&fetchedTodo, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
 			return
@@ -112,17 +111,16 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(500)
 		return
 	}
-	updateTodo := model.Todo{Title: todoRequest.Title, Description: todo.Description,
-		Status: todo.Status, Priority: todoRequest.Priority, ExpirationDate: todo.ExpirationDate}
-	if err := t.db.Model(&todo).Updates(updateTodo).Error; err != nil {
+	updateTodo := model.Todo{Title: todoRequest.Title, Description: todoRequest.Description,
+		Status: todoRequest.Status, Priority: todoRequest.Priority, ExpirationDate: todoRequest.ExpirationDate}
+	if err := t.db.Omit("created_at", "updated_at").Model(&fetchedTodo).Updates(updateTodo).Error; err != nil {
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(500)
 		return
 	}
 	c.JSON(200, gin.H{"data": gin.H{
-		"id": todo.ID,
+		"id": fetchedTodo.ID,
 	},
 	})
-
 }
 
 // 該当のIDのtodoリストの削除
