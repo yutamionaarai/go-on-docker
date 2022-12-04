@@ -7,6 +7,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
+// A Todo is ...
 type Todo struct {
 	ID          int64  `json:"id"`
 	Title       string `json:"title"`
@@ -20,6 +21,7 @@ type Todo struct {
 	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
+// Decides Ozzo-Validation Rules for Todo
 func (t Todo) Validate() error {
 	return validation.ValidateStruct(&t,
 		validation.Field(&t.Title, validation.Required.Error("必須項目です。"), validation.Length(0, 32).Error("32文字以下にしてください。")),
@@ -31,6 +33,7 @@ func (t Todo) Validate() error {
 	)
 }
 
+// TodoValidate implements Validate Decided with Above Rule
 func (todoRequest *Todo) TodoValidate(c *gin.Context) error {
 	if err := todoRequest.Validate(); err != nil {
 		if err, ok := err.(validation.InternalError); ok {

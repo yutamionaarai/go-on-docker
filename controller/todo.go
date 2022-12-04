@@ -19,12 +19,13 @@ func NewTodoController(db *gorm.DB) *TodoController {
 	}
 }
 
+// TodoController returns Hello World.
 func (t *TodoController) HelloController(c *gin.Context) {
 	w := c.Writer
 	fmt.Fprintf(w, "Hello, World")
 }
 
-// todoリストを全件取得
+// TodoController fetchs All Todos from DB and returns it.
 func (t *TodoController) FindTodosController(c *gin.Context) {
 	var todos []model.Todo
 	err := t.db.Find(&todos).Error
@@ -37,7 +38,7 @@ func (t *TodoController) FindTodosController(c *gin.Context) {
 	})
 }
 
-// 該当のIDのtodoリストを取得
+// TodoController fetchs One Todo from DB and returns it.
 func (t *TodoController) FindTodoController(c *gin.Context) {
 	id := c.Param("id")
 	var todo model.Todo
@@ -55,7 +56,7 @@ func (t *TodoController) FindTodoController(c *gin.Context) {
 	})
 }
 
-// todoリストの作成
+// A TodoController Creates One Todo on DB.
 func (t *TodoController) CreateTodoController(c *gin.Context) {
 	var user model.User
 	var todoRequest model.Todo
@@ -89,7 +90,7 @@ func (t *TodoController) CreateTodoController(c *gin.Context) {
 	})
 }
 
-// 該当のIDのtodoリストの更新
+// A TodoController Updates One Todo on DB.
 func (t *TodoController) UpdateTodoController(c *gin.Context) {
 	id := c.Param("id")
 	var todoRequest model.Todo
@@ -123,7 +124,7 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 	})
 }
 
-// 該当のIDのtodoリストの削除
+// A TodoController Deletes One Todo.
 func (t *TodoController) DeleteTodoController(c *gin.Context) {
 	id := c.Param("id")
 	var todo model.Todo

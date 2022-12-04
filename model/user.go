@@ -2,6 +2,7 @@ package model
 
 import "time"
 
+// A User is ...
 type User struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`

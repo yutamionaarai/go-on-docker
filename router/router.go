@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// NewRouter implement various Endpoints.
 func NewRouter(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
 	todoController := controller.NewTodoController(db)
