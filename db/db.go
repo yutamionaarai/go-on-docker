@@ -13,3 +13,12 @@ func NewDB(dsn string) (*gorm.DB, error) {
 	}
 	return db, nil
 }
+
+func CloseDB(db *gorm.DB) error {
+	postgres, _ := db.DB()
+	err := postgres.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -16,10 +16,17 @@ func main() {
 		log.Fatalln("failed to load ENV", err)
 	}
 	dsn := os.Getenv("DB_DSN")
-	db, err := db.NewDB(dsn)
+	postgresDB, err := db.NewDB(dsn)
 	if err != nil {
 		log.Fatalln("failed to open DB", err)
 	}
-	r := router.NewRouter(db)
+	defer func() {
+		err := db.CloseDB(postgresDB)
+		if err != nil {
+			log.Fatalln("failed to close DB", err)
+		}
+	}()
+
+	r := router.NewRouter(postgresDB)
 	r.Run()
 }
