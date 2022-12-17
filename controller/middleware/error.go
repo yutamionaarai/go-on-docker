@@ -12,7 +12,7 @@ import (
 // Context handles all errors occured in TodoController.
 func HandleErrors(c *gin.Context) {
 	c.Next()
-	logger, _ := zap.NewDevelopment()
+	logger, _ := zap.NewProduction()
 	requestID := c.Request.Header.Get("X-Request-Id")
 	publicError := c.Errors.ByType(gin.ErrorTypePublic).Last()
 	if publicError != nil && publicError.Meta != nil {
