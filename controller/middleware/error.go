@@ -13,6 +13,7 @@ import (
 func HandleErrors(c *gin.Context) {
 	c.Next()
 	logger, _ := zap.NewProduction()
+	defer logger.Sync()
 	requestID := c.Request.Header.Get("X-Request-Id")
 	publicError := c.Errors.ByType(gin.ErrorTypePublic).Last()
 	if publicError != nil && publicError.Meta != nil {
