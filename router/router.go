@@ -4,6 +4,7 @@ import (
 	"app/controller"
 	"app/controller/middleware"
 
+	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -11,6 +12,7 @@ import (
 // NewRouter implement various Endpoints.
 func NewRouter(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
+	r.Use(requestid.New())
 	todoController := controller.NewTodoController(db)
 	r.Use(middleware.HandleErrors)
 	r.GET("/", todoController.HelloController)
