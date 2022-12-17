@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -64,9 +65,11 @@ func (t *TodoRequest) TodoValidate(c *gin.Context) error {
 		if err, ok := err.(validation.InternalError); ok {
 			// バリデーション処理中のInternal Server Errorを切り分け
 			// 参考にした箇所 https://qiita.com/gold-kou/items/201a19d9d0c760cc2104
+			err := errors.New(err.Error())
 			c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 			return err
 		}
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(400)
 		return err
 	}

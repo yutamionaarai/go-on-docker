@@ -2,10 +2,10 @@ package controller
 
 import (
 	"app/model"
-	"errors"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +30,7 @@ func (t *TodoController) FindTodosController(c *gin.Context) {
 	var todos []*model.Todo
 	err := t.db.Find(&todos).Error
 	if err != nil {
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
@@ -46,9 +47,11 @@ func (t *TodoController) FindTodoController(c *gin.Context) {
 	err := t.db.First(&todo, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err := errors.New(err.Error())
 			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
 			return
 		}
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
@@ -65,6 +68,7 @@ func (t *TodoController) CreateTodoController(c *gin.Context) {
 	var todoRequest model.TodoRequest
 	err := c.ShouldBindJSON(&todoRequest)
 	if err != nil {
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(400)
 		return
 	}
@@ -73,9 +77,11 @@ func (t *TodoController) CreateTodoController(c *gin.Context) {
 	}
 	if err := t.db.First(&user, todoRequest.UserID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err := errors.New(err.Error())
 			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
 			return
 		}
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
@@ -83,6 +89,7 @@ func (t *TodoController) CreateTodoController(c *gin.Context) {
 		Status: todoRequest.Status, Priority: todoRequest.Priority, ExpirationDate: todoRequest.ExpirationDate}
 
 	if err := t.db.Omit("created_at", "updated_at").Create(&todo).Error; err != nil {
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
@@ -98,6 +105,7 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 	var todoRequest model.TodoRequest
 	err := c.ShouldBindJSON(&todoRequest)
 	if err != nil {
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(400)
 		return
 	}
@@ -107,15 +115,18 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 	var fetchedTodo model.Todo
 	if err := t.db.First(&fetchedTodo, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err := errors.New(err.Error())
 			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
 			return
 		}
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
 	updateTodo := model.Todo{Title: todoRequest.Title, Description: todoRequest.Description,
 		Status: todoRequest.Status, Priority: todoRequest.Priority, ExpirationDate: todoRequest.ExpirationDate}
 	if err := t.db.Omit("created_at", "updated_at").Model(&fetchedTodo).Updates(updateTodo).Error; err != nil {
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
@@ -131,14 +142,17 @@ func (t *TodoController) DeleteTodoController(c *gin.Context) {
 	var todo model.Todo
 	if err := t.db.First(&todo, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err := errors.New(err.Error())
 			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
 			return
 		}
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
 	err := t.db.Delete(&todo, id).Error
 	if err != nil {
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
