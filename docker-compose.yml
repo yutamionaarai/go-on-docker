@@ -27,6 +27,11 @@ services:
     tty: true
     ports:
       - "8080:8080"
+    healthcheck:
+      test: "curl -f http://localhost:8080 || exit 1"
+      interval: 10s
+      timeout: 3m
+      retries: 20
     depends_on:
       db:
         condition: service_healthy
@@ -43,10 +48,16 @@ services:
       context: ./frontend/my-app
       dockerfile: Dockerfile
     command: "npm run dev"
+    tty: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     ports:
       - "3001:3000"
-
-    # Todo:frontendにもdepends_on app:を付ける
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_healthy
     volumes:
       - type: bind
         source: ./frontend/my-app
