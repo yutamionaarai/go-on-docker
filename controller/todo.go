@@ -2,7 +2,9 @@ package controller
 
 import (
 	"app/model"
+	"app/repository"
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -10,12 +12,12 @@ import (
 )
 
 type TodoController struct {
-	db *gorm.DB
+	repo repository.TodoRepository
 }
 
-func NewTodoController(db *gorm.DB) *TodoController {
+func NewTodoController(repo repository.TodoRepository) *TodoController {
 	return &TodoController{
-		db: db,
+		repo: repo,
 	}
 }
 
@@ -27,14 +29,12 @@ func (t *TodoController) HelloController(c *gin.Context) {
 
 // TodoController fetchs All Todos from DB and returns it.
 func (t *TodoController) FindTodosController(c *gin.Context) {
-	var todos []*model.Todo
-	err := t.db.Find(&todos).Error
+	todosResponse, err := t.repo.FindTodos()
 	if err != nil {
 		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
-	todosResponse := model.FindTodosResponse{Todos: todos}
 	c.JSON(200, gin.H{
 		"data": todosResponse,
 	})
@@ -42,21 +42,14 @@ func (t *TodoController) FindTodosController(c *gin.Context) {
 
 // TodoController fetchs One Todo from DB and returns it.
 func (t *TodoController) FindTodoController(c *gin.Context) {
-	id := c.Param("id")
-	var todo model.Todo
-	err := t.db.First(&todo, id).Error
+	idInt64, err := convertStringIDToInt64(c, "id")
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err := errors.New(err.Error())
-			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
-			return
-		}
-		err := errors.New(err.Error())
-		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
 		return
 	}
-	todoResponse := model.FindTodoResponse{Todo: &todo}
-
+	todoResponse, err := t.repo.FindTodo(idInt64)
+	if err := t.handleErrorResponse(c, err); err != nil {
+		return
+	}
 	c.JSON(200, gin.H{
 		"data": todoResponse,
 	})
@@ -64,8 +57,7 @@ func (t *TodoController) FindTodoController(c *gin.Context) {
 
 // A TodoController Creates One Todo on DB.
 func (t *TodoController) CreateTodoController(c *gin.Context) {
-	var user model.User
-	var todoRequest model.TodoRequest
+	var todoRequest *model.TodoRequest
 	err := c.ShouldBindJSON(&todoRequest)
 	if err != nil {
 		err := errors.New(err.Error())
@@ -75,36 +67,23 @@ func (t *TodoController) CreateTodoController(c *gin.Context) {
 	if err := todoRequest.TodoValidate(c); err != nil {
 		return
 	}
-	if err := t.db.First(&user, todoRequest.UserID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err := errors.New(err.Error())
-			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
-			return
-		}
-		err := errors.New(err.Error())
-		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
+	createTodoResponse, err := t.repo.CreateTodo(todoRequest)
+	if err := t.handleErrorResponse(c, err); err != nil {
 		return
 	}
-	todo := model.Todo{UserID: todoRequest.UserID, Title: todoRequest.Title, Description: todoRequest.Description,
-		Status: todoRequest.Status, Priority: todoRequest.Priority, ExpirationDate: todoRequest.ExpirationDate}
-
-	if err := t.db.Omit("created_at", "updated_at").Create(&todo).Error; err != nil {
-		err := errors.New(err.Error())
-		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
-		return
-	}
-	createResponse := model.CreateTodoResponse{ID: todo.ID}
 	c.JSON(200, gin.H{
-		"data": createResponse,
+		"data": createTodoResponse,
 	})
 }
 
 // A TodoController Updates One Todo on DB.
 func (t *TodoController) UpdateTodoController(c *gin.Context) {
-	id := c.Param("id")
-	var todoRequest model.TodoRequest
-	err := c.ShouldBindJSON(&todoRequest)
+	idInt64, err := convertStringIDToInt64(c, "id")
 	if err != nil {
+		return
+	}
+	var todoRequest *model.TodoRequest
+	if err := c.ShouldBindJSON(&todoRequest); err != nil {
 		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(400)
 		return
@@ -112,52 +91,53 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 	if err := todoRequest.TodoValidate(c); err != nil {
 		return
 	}
-	var fetchedTodo model.Todo
-	if err := t.db.First(&fetchedTodo, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err := errors.New(err.Error())
-			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
-			return
-		}
-		err := errors.New(err.Error())
-		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
+	updateTodoRepsonse, err := t.repo.UpdateTodo(todoRequest, idInt64)
+	if err := t.handleErrorResponse(c, err); err != nil {
 		return
 	}
-	updateTodo := model.Todo{Title: todoRequest.Title, Description: todoRequest.Description,
-		Status: todoRequest.Status, Priority: todoRequest.Priority, ExpirationDate: todoRequest.ExpirationDate}
-	if err := t.db.Omit("created_at", "updated_at").Model(&fetchedTodo).Updates(updateTodo).Error; err != nil {
-		err := errors.New(err.Error())
-		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
-		return
-	}
-	updateResponse := model.UpdateTodoResponse{ID: fetchedTodo.ID}
 	c.JSON(200, gin.H{
-		"data": updateResponse,
+		"data": updateTodoRepsonse,
 	})
 }
 
 // A TodoController Deletes One Todo.
 func (t *TodoController) DeleteTodoController(c *gin.Context) {
-	id := c.Param("id")
-	var todo model.Todo
-	if err := t.db.First(&todo, id).Error; err != nil {
+	idInt64, err := convertStringIDToInt64(c, "id")
+	if err != nil {
+		return
+	}
+	todo := &model.Todo{}
+	deleteTodoResponse, err := t.repo.DeleteTodo(todo, idInt64)
+	if err := t.handleErrorResponse(c, err); err != nil {
+		return
+	}
+	c.JSON(200, gin.H{
+		"data": deleteTodoResponse,
+	})
+}
+
+// handleError is a function to handle error response.
+func (t *TodoController) handleErrorResponse(c *gin.Context, err error) error {
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err := errors.New(err.Error())
 			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
-			return
+			return err
 		}
 		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
-		return
+		return err
 	}
-	err := t.db.Delete(&todo, id).Error
+	return nil
+}
+
+// convertStringIDToInt64 is a function to convert ID of string received outside to Int64.
+func convertStringIDToInt64(c *gin.Context, param string) (int64, error) {
+	id := c.Param(param)
+	idInt64, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		err := errors.New(err.Error())
-		c.Error(err).SetType(gin.ErrorTypePrivate).SetMeta(500)
-		return
+		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
+		return 0, err
 	}
-	deleteResponse := model.DeleteTodoResponse{}
-	c.JSON(200, gin.H{
-		"data": deleteResponse,
-	})
+	return idInt64, nil
 }

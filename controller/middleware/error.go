@@ -20,7 +20,11 @@ func HandleErrors(c *gin.Context) {
 		statusCode := publicError.Meta.(int)
 		errMsg := publicError.Error()
 		if er, ok := publicError.Err.(interface{ StackTrace() errors.StackTrace }); ok {
-			logger.Warn(errMsg, zap.String("requestID", requestID), zap.String("stackTrace", fmt.Sprintf("%+v\n\n", er.StackTrace())), zap.Time("now", time.Now()))
+			logger.Warn(errMsg,
+				zap.String("requestID", requestID),
+				zap.String("stackTrace", fmt.Sprintf("%+v\n\n", er.StackTrace())),
+				zap.Time("now", time.Now()),
+			)
 			c.JSON(statusCode, gin.H{
 				"message": errMsg,
 			})
@@ -31,7 +35,11 @@ func HandleErrors(c *gin.Context) {
 		statusCode := privateError.Meta.(int)
 		errMsg := privateError.Error()
 		if er, ok := privateError.Err.(interface{ StackTrace() errors.StackTrace }); ok {
-			logger.Error(errMsg, zap.String("requestID", requestID), zap.String("stackTrace", fmt.Sprintf("%+v\n\n", er.StackTrace())), zap.Time("now", time.Now()))
+			logger.Error(errMsg,
+				zap.String("requestID", requestID),
+				zap.String("stackTrace", fmt.Sprintf("%+v\n\n", er.StackTrace())),
+				zap.Time("now", time.Now()),
+			)
 			c.JSON(statusCode, gin.H{
 				"message": "システムエラーが発生しました",
 			})
