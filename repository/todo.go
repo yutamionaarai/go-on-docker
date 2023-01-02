@@ -47,6 +47,7 @@ func (r *todoRepository) FindTodos() (model.FindTodosResponse, error) {
 func (r *todoRepository) CreateTodo(t *model.TodoRequest) (model.CreateTodoResponse, error) {
 	var user *model.User
 	if err := r.db.First(&user, t.UserID).Error; err != nil {
+		handleNotFoundError(err)
 		return model.CreateTodoResponse{}, err
 	}
 	todo := model.Todo{
