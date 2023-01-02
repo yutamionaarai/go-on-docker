@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 type TodoController struct {
@@ -119,7 +118,7 @@ func (t *TodoController) DeleteTodoController(c *gin.Context) {
 // handleError is a function to handle error response.
 func (t *TodoController) handleErrorResponse(c *gin.Context, err error) error {
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err.Error() == "record not found" {
 			err := errors.New(err.Error())
 			c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
 			return err

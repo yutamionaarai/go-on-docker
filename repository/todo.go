@@ -2,6 +2,7 @@ package repository
 
 import (
 	"app/model"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -19,13 +20,16 @@ type todoRepository struct {
 }
 
 func NewTodoRepository(db *gorm.DB) TodoRepository {
-	return &todoRepository{db}
+	return &todoRepository{
+		db: db,
+	}
 }
 
 func (r *todoRepository) FindTodo(id int64) (model.FindTodoResponse, error) {
 	var todo *model.Todo
 	err := r.db.First(&todo, id).Error
 	if err != nil {
+		handleNotFoundError(err)
 		return model.FindTodoResponse{}, err
 	}
 	return model.FindTodoResponse{Todo: todo}, nil
@@ -64,6 +68,7 @@ func (r *todoRepository) UpdateTodo(t *model.TodoRequest, id int64) (model.Updat
 	var todo *model.Todo
 	err := r.db.First(&todo, id).Error
 	if err != nil {
+		handleNotFoundError(err)
 		return model.UpdateTodoResponse{}, err
 	}
 	updateTodo := model.Todo{
@@ -83,6 +88,7 @@ func (r *todoRepository) UpdateTodo(t *model.TodoRequest, id int64) (model.Updat
 func (r *todoRepository) DeleteTodo(t *model.Todo, id int64) (model.DeleteTodoResponse, error) {
 	err := r.db.First(&t, id).Error
 	if err != nil {
+		handleNotFoundError(err)
 		return model.DeleteTodoResponse{}, err
 	}
 
@@ -90,4 +96,12 @@ func (r *todoRepository) DeleteTodo(t *model.Todo, id int64) (model.DeleteTodoRe
 		return model.DeleteTodoResponse{}, err
 	}
 	return model.DeleteTodoResponse{}, nil
+}
+
+// handleNotFoundError is a function to name the error of gorm.ErrRecordNotFound for getting gormDB  out of Controller layer
+func handleNotFoundError(err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("record not found")
+	}
+	return err
 }
