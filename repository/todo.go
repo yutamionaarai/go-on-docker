@@ -67,17 +67,15 @@ func (r *todoRepository) UpdateTodo(t *model.TodoRequest, id int64) (model.Updat
 	if err := r.db.First(&user, t.UserID).Error; err != nil {
 		return model.UpdateTodoResponse{}, err
 	}
-	var todo *model.Todo
-	err := r.db.First(&todo, id).Error
-	if err != nil {
-		return model.UpdateTodoResponse{}, err
+	todo := &model.Todo{
+		ID:             id,
+		UserID:         t.UserID,
+		Title:          t.Title,
+		Description:    t.Description,
+		Status:         t.Status,
+		Priority:       t.Priority,
+		ExpirationDate: t.ExpirationDate,
 	}
-
-	todo.Title = t.Title
-	todo.Description = t.Description
-	todo.Status = t.Status
-	todo.Priority = t.Priority
-	todo.ExpirationDate = t.ExpirationDate
 
 	if err := r.db.Omit("created_at", "updated_at").Save(todo).Error; err != nil {
 		return model.UpdateTodoResponse{}, err
@@ -87,12 +85,7 @@ func (r *todoRepository) UpdateTodo(t *model.TodoRequest, id int64) (model.Updat
 }
 
 func (r *todoRepository) DeleteTodo(t *model.Todo, id int64) (model.DeleteTodoResponse, error) {
-	err := r.db.First(&t, id).Error
-	if err != nil {
-		return model.DeleteTodoResponse{}, err
-	}
-
-	if err := r.db.Delete(&t, id).Error; err != nil {
+	if err := r.db.Delete(&model.Todo{}, id).Error; err != nil {
 		return model.DeleteTodoResponse{}, err
 	}
 	return model.DeleteTodoResponse{}, nil
