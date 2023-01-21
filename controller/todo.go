@@ -105,8 +105,7 @@ func (t *TodoController) DeleteTodoController(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	todo := &model.Todo{}
-	deleteTodoResponse, err := t.repo.DeleteTodo(todo, idInt64)
+	deleteTodoResponse, err := t.repo.DeleteTodo(idInt64)
 	if err := t.handleErrorResponse(c, err); err != nil {
 		return
 	}
@@ -139,4 +138,25 @@ func convertStringIDToInt64(c *gin.Context, param string) (int64, error) {
 		return 0, err
 	}
 	return idInt64, nil
+}
+
+
+func (c *TodoController) FindTodo(id int64) (model.FindTodoResponse, error) {
+	return c.repo.FindTodo(id)
+}
+
+func (c *TodoController) FindTodos() (model.FindTodosResponse, error) {
+	return c.repo.FindTodos()
+}
+
+func (c *TodoController) CreateTodo(t *model.TodoRequest) (model.CreateTodoResponse, error) {
+	return c.repo.CreateTodo(t)
+}
+
+func (c *TodoController) UpdateTodo(t *model.TodoRequest, id int64) (model.UpdateTodoResponse, error) {
+	return c.repo.UpdateTodo(t, id)
+}
+
+func (c *TodoController) DeleteTodo(id int64) (model.DeleteTodoResponse, error) {
+	return c.repo.DeleteTodo(id)
 }
