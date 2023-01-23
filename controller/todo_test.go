@@ -2,121 +2,110 @@ package controller_test
 
 import (
 	"app/controller"
+	"app/controller/middleware"
 	"app/mock"
 	"app/model"
 	"app/testdata"
-	"fmt"
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-contrib/requestid"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/suite"
 )
 
 
-type TodoControllerTestSuite struct {
-	suite.Suite
-	mock   *mock.TodoRepositoryMock
-	ctrl   *controller.TodoController
-   }
+func NewRouter(todoController *controller.TodoController) *gin.Engine {
+    r := gin.Default()
+    r.Use(requestid.New())
+    r.Use(middleware.HandleErrors)
 
-// テスト開始前の共通処理
+    todos := r.Group("/todos")
+    {
+        todos.GET("/hello", todoController.HelloController)
+        // todoリストを全件取得
+        todos.GET("/", todoController.FindTodosController)
+        // 該当のIDのtodoリストを取得
+        todos.GET("/:id", todoController.FindTodoController)
+        // todoリストの作成
+        todos.POST("/", todoController.CreateTodoController)
+        // 該当のIDのtodoリストの更新
+        todos.PUT("/:id", todoController.UpdateTodoController)
+        // 該当のIDのtodoリストの削除
+        todos.DELETE("/:id", todoController.DeleteTodoController)
+    }
+    return r
+}
+
+type TodoControllerTestSuite struct {
+    suite.Suite
+    mock   *mock.TodoRepositoryMock
+    router   *gin.Engine
+}
+
 func (s *TodoControllerTestSuite) SetupTest() {
     s.mock = new(mock.TodoRepositoryMock)
-    s.ctrl = controller.NewTodoController(s.mock)
+	s.mock.On("FindTodo").Return(model.FindTodoResponse{Todo: testdata.Todo}, nil)
+	s.mock.On("FindTodos").Return(model.FindTodosResponse{Todos: testdata.Todos}, nil)
+	s.mock.On("CreateTodo").Return(model.CreateTodoResponse{ID: 1}, nil)
+	s.mock.On("UpdateTodo").Return(model.UpdateTodoResponse{ID: 1}, nil)
+	s.mock.On("DeleteTodo").Return(model.DeleteTodoResponse{}, nil)
+    todoController := controller.NewTodoController(
+        s.mock,
+    )
+    s.router = NewRouter(todoController)
 }
 
-// FindTodoに対するテスト
+
 func (s *TodoControllerTestSuite) TestFindTodo() {
-	s.T().Parallel()
-	testCases := map[string]struct {
-		id      int64
-		wantErr error
-		wantTodoResponse model.FindTodoResponse
-	}{
-		"正常系データ": {
-			id:      int64(1),
-			wantErr: nil,
-			wantTodoResponse: model.FindTodoResponse{Todo: testdata.Todo},
- 	},
-		"異常系データ(IDが負)": {
-			id:      int64(-1),
-			wantErr: fmt.Errorf("id is negative"),
-			wantTodoResponse: model.FindTodoResponse{},
-		},
-	}
-	for name, tc := range testCases {
-		name := name
-		tc := tc
-		s.Run(name, func() {
-			s.T().Parallel()
-			s.mock.On("FindTodo", tc.id).Return(tc.wantTodoResponse, tc.wantErr)
-			gotResponse, gotErr := s.ctrl.FindTodo(tc.id)
-			// 期待するエラーと返却されたエラーが一致するか
-			s.Equal(tc.wantErr, gotErr)
-			// 期待するレスポンスと返却されたエラーが一致するか
-			s.Equal(tc.wantTodoResponse, gotResponse)
-		})
-	}
+    s.T().Parallel()
+	w := httptest.NewRecorder()
+    req, _ := http.NewRequest("GET", "/todos/:id", nil)
+    s.router.ServeHTTP(w, req)
+	s.Equal(http.StatusOK, w.Code)
 }
 
-
-func (s *TodoControllerTestSuite) TestFindTodos() {
-	s.T().Parallel()
-	testCases := map[string]struct {
-		wantErr error
-		wantTodosResponse model.FindTodosResponse
-	}{
-		"正常系データ": {
-			wantErr: nil,
-			wantTodosResponse: model.FindTodosResponse{Todos: testdata.Todos},
-		},
-	}
-	for name, tc := range testCases {
-		name := name
-		tc := tc
-		s.Run(name, func() {
-			s.T().Parallel()
-			s.mock.On("FindTodos").Return(tc.wantTodosResponse, tc.wantErr)
-			gotResponse, gotErr := s.ctrl.FindTodos()
-			s.Equal(tc.wantErr, gotErr)
-			s.Equal(tc.wantTodosResponse, gotResponse)
-		})
-	}
+func (s *TodoControllerTestSuite) TestFindsTodo() {
+    s.T().Parallel()
+	w := httptest.NewRecorder()
+    req, _ := http.NewRequest("GET", "/todos/", nil)
+    s.router.ServeHTTP(w, req)
+	s.Equal(http.StatusOK, w.Code)
 }
 
 func (s *TodoControllerTestSuite) TestCreateTodo() {
-	s.T().Parallel()
-	testCases := map[string]struct {
-		id      int64
-		wantErr error
-		todoRequest *model.TodoRequest
-		wantTodoResponse model.CreateTodoResponse
-	}{
-		"正常系データ": {
-			id:      int64(1),
-			wantErr: nil,
-			todoRequest: testdata.TodoNormalRequest,
-			wantTodoResponse: model.CreateTodoResponse{ID: 1},
-		},
-		"異常系データ(項目タイトルが存在しない)": {
-			id:          int64(-1),
-			wantErr: fmt.Errorf("titleは必須項目です。"),
-			todoRequest: testdata.TodoAbnormalRequest,
-			wantTodoResponse: model.CreateTodoResponse{},
-		},
-	}
-	for name, tc := range testCases {
-		name := name
-		tc := tc
-		s.Run(name, func() {
-			s.T().Parallel()
-			s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, tc.wantErr)
-			gotResponse, gotErr := s.ctrl.CreateTodo(tc.todoRequest)
-			s.Equal(tc.wantErr, gotErr)
-			s.Equal(tc.wantTodoResponse, gotResponse)
-		})
-	}
+    s.T().Parallel()
+	w := httptest.NewRecorder()
+    jsonValue, _ := json.Marshal(testdata.TodoNormalRequest)
+    req, _ := http.NewRequest("POST", "/todos/", bytes.NewBuffer(jsonValue))
+    s.router.ServeHTTP(w, req)
+	s.Equal(http.StatusOK, w.Code)
 }
 
+
+func (s *TodoControllerTestSuite) TestUpdateTodo() {
+    s.T().Parallel()
+	w := httptest.NewRecorder()
+    jsonValue, _ := json.Marshal(testdata.TodoNormalRequest)
+    req, _ := http.NewRequest("PUT", "/todos/:id", bytes.NewBuffer(jsonValue))
+    s.router.ServeHTTP(w, req)
+    var response model.UpdateTodoResponse
+    json.NewDecoder(w.Body).Decode(&response)
+    
+	s.Equal(http.StatusOK, w.Code)
+    s.Equal(model.UpdateTodoResponse{ID: 1}, response)
+}
+
+func (s *TodoControllerTestSuite) TestDeleteTodo() {
+    s.T().Parallel()
+	w := httptest.NewRecorder()
+    req, _ := http.NewRequest("DELETE", "/todos/:id", nil)
+    s.router.ServeHTTP(w, req)
+	s.Equal(http.StatusOK, w.Code)
+}
 
 func TestTodoControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(TodoControllerTestSuite))
