@@ -96,8 +96,8 @@ func (s *TodoControllerTestSuite) TestCreateTodo() {
         name := name
         tc := tc
         s.Run(name, func() {
-            s.T().Parallel()
-            s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, nil)
+			s.T().Parallel()
+			s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, nil)
 			w := httptest.NewRecorder()
 			jsonValue, _ := json.Marshal(tc.todoRequest)
 			req, _ := http.NewRequest("POST", "/todos/", bytes.NewBuffer(jsonValue))
