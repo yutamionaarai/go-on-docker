@@ -48,10 +48,10 @@ func (s *TodoControllerTestSuite) TestFindTodo() {
 		s.Run(name, func() {
 			s.T().Parallel()
 			s.mock.On("FindTodo", int64(1)).Return(model.FindTodoResponse{Todo:testdata.Todo}, nil)
-		    w := httptest.NewRecorder()
-		    req, _ := http.NewRequest("GET", "/todos/1", nil)
-		    s.router.ServeHTTP(w, req)
-		    s.Equal(tc.wantStatusCode, w.Code)
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", "/todos/1", nil)
+			s.router.ServeHTTP(w, req)
+			s.Equal(tc.wantStatusCode, w.Code)
 		})
 	}
 }
@@ -97,7 +97,7 @@ func (s *TodoControllerTestSuite) TestCreateTodo() {
         tc := tc
         s.Run(name, func() {
 			s.T().Parallel()
-            s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, nil)
+			s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, nil)
             w := httptest.NewRecorder()
             jsonValue, _ := json.Marshal(tc.todoRequest)
             req, _ := http.NewRequest("POST", "/todos/", bytes.NewBuffer(jsonValue))
@@ -129,7 +129,6 @@ func (s *TodoControllerTestSuite) TestUpdateTodo() {
         name := name
         tc := tc
         s.Run(name, func() {
-
 			s.T().Parallel()
             w := httptest.NewRecorder()
             s.mock.On("UpdateTodo", int64(1), tc.todoRequest).Return(tc.wantTodoResponse, nil)
