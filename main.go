@@ -4,7 +4,9 @@ import (
 	"log"
 	"os"
 
+	"app/controller"
 	"app/db"
+	"app/repository"
 	"app/router"
 
 	"github.com/joho/godotenv"
@@ -26,7 +28,13 @@ func main() {
 			log.Fatalln("failed to close DB", err)
 		}
 	}()
+	todoController := controller.NewTodoController(
+		repository.NewTodoRepository(
+			todoDB,
+		),
+	)
 
-	r := router.NewRouter(todoDB)
+
+	r := router.NewRouter(todoController)
 	r.Run()
 }

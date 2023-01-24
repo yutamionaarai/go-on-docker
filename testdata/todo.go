@@ -43,17 +43,8 @@ var Todos = []*model.Todo{
 	},
 }
 
-var TodoNormalRequest = &model.TodoRequest{
+var TodoRequest = &model.TodoRequest{
 	Title: "title",
-	Description: "Description",
-	Status: "Status",
-	Priority: 1,
-	ExpirationDate: &time.Time{},
-	UserID: 1,
-}
-
-// titleが不整合
-var TodoAbnormalRequest = &model.TodoRequest{
 	Description: "Description",
 	Status: "Status",
 	Priority: 1,

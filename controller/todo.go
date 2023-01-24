@@ -90,12 +90,12 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 	if err := todoRequest.TodoValidate(c); err != nil {
 		return
 	}
-	updateTodoRepsonse, err := t.repo.UpdateTodo(todoRequest, idInt64)
+	updateTodoResponse, err := t.repo.UpdateTodo(todoRequest, idInt64)
 	if err := t.handleErrorResponse(c, err); err != nil {
 		return
 	}
 	c.JSON(200, gin.H{
-		"data": updateTodoRepsonse,
+		"data": updateTodoResponse,
 	})
 }
 

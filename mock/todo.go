@@ -21,12 +21,12 @@ func (m *TodoRepositoryMock) FindTodos() (model.FindTodosResponse, error) {
 }
 
 func (m *TodoRepositoryMock) CreateTodo(t *model.TodoRequest) (model.CreateTodoResponse, error) {
-	result := m.Called()
+	result := m.Called(t)
 	return result.Get(0).(model.CreateTodoResponse), result.Error(1)
 }
 
 func (m *TodoRepositoryMock) UpdateTodo(t *model.TodoRequest, id int64) (model.UpdateTodoResponse, error) {
-	result := m.Called(t, id)
+	result := m.Called(id, t)
 	return result.Get(0).(model.UpdateTodoResponse), result.Error(1)
 }
 
