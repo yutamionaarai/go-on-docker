@@ -47,11 +47,11 @@ func (s *TodoControllerTestSuite) TestFindTodo() {
 		tc := tc
 		s.Run(name, func() {
 			s.T().Parallel()
-            s.mock.On("FindTodo", int64(1)).Return(model.FindTodoResponse{Todo:testdata.Todo}, nil)
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/todos/1", nil)
-			s.router.ServeHTTP(w, req)
-			s.Equal(tc.wantStatusCode, w.Code)
+			s.mock.On("FindTodo", int64(1)).Return(model.FindTodoResponse{Todo:testdata.Todo}, nil)
+		    w := httptest.NewRecorder()
+		    req, _ := http.NewRequest("GET", "/todos/1", nil)
+		    s.router.ServeHTTP(w, req)
+		    s.Equal(tc.wantStatusCode, w.Code)
 		})
 	}
 }
@@ -69,12 +69,12 @@ func (s *TodoControllerTestSuite) TestFindsTodo() {
 		name := name
 		tc := tc
 		s.Run(name, func() {
-            s.T().Parallel()
-            s.mock.On("FindTodos").Return(model.FindTodosResponse{Todos: testdata.Todos}, nil)
-            w := httptest.NewRecorder()
-            req, _ := http.NewRequest("GET", "/todos/", nil)
-            s.router.ServeHTTP(w, req)
-            s.Equal(tc.wantStatusCode, w.Code)
+			s.T().Parallel()
+			s.mock.On("FindTodos").Return(model.FindTodosResponse{Todos: testdata.Todos}, nil)
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", "/todos/", nil)
+			s.router.ServeHTTP(w, req)
+			s.Equal(tc.wantStatusCode, w.Code)
 		})
 	}
 }
@@ -129,6 +129,7 @@ func (s *TodoControllerTestSuite) TestUpdateTodo() {
         name := name
         tc := tc
         s.Run(name, func() {
+
 			s.T().Parallel()
             w := httptest.NewRecorder()
             s.mock.On("UpdateTodo", int64(1), tc.todoRequest).Return(tc.wantTodoResponse, nil)
@@ -157,12 +158,12 @@ func (s *TodoControllerTestSuite) TestDeleteTodo() {
         name := name
         tc := tc
         s.Run(name, func() {
-            s.T().Parallel()
-            w := httptest.NewRecorder()
-            s.mock.On("DeleteTodo", int64(1)).Return(model.DeleteTodoResponse{}, nil)
-            req, _ := http.NewRequest("DELETE", "/todos/1", nil)
-            s.router.ServeHTTP(w, req)
-            s.Equal(tc.wantStatusCode, w.Code)
+			s.T().Parallel()
+			w := httptest.NewRecorder()
+			s.mock.On("DeleteTodo", int64(1)).Return(model.DeleteTodoResponse{}, nil)
+			req, _ := http.NewRequest("DELETE", "/todos/1", nil)
+			s.router.ServeHTTP(w, req)
+			s.Equal(tc.wantStatusCode, w.Code)
         })
     }
 }
