@@ -98,15 +98,15 @@ func (s *TodoControllerTestSuite) TestCreateTodo() {
         s.Run(name, func() {
 			s.T().Parallel()
 			s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, nil)
-            w := httptest.NewRecorder()
-            jsonValue, _ := json.Marshal(tc.todoRequest)
-            req, _ := http.NewRequest("POST", "/todos/", bytes.NewBuffer(jsonValue))
-            s.router.ServeHTTP(w, req)
-            body, _ := ioutil.ReadAll(w.Result().Body)
-            var response model.CreateTodoResponse
-            json.Unmarshal(body, &response)
-            s.Equal(tc.wantStatusCode, w.Code)
-            s.Equal(tc.wantTodoResponse, response)
+			w := httptest.NewRecorder()
+			jsonValue, _ := json.Marshal(tc.todoRequest)
+			req, _ := http.NewRequest("POST", "/todos/", bytes.NewBuffer(jsonValue))
+			s.router.ServeHTTP(w, req)
+			body, _ := ioutil.ReadAll(w.Result().Body)
+			var response model.CreateTodoResponse
+			json.Unmarshal(body, &response)
+			s.Equal(tc.wantStatusCode, w.Code)
+			s.Equal(tc.wantTodoResponse, response)
         })
 	}
 }
