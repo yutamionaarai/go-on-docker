@@ -163,7 +163,7 @@ func (s *TodoControllerTestSuite) TestDeleteTodo() {
 			req, _ := http.NewRequest("DELETE", "/todos/1", nil)
 			s.router.ServeHTTP(w, req)
 			s.Equal(tc.wantStatusCode, w.Code)
-        })
+		})
 	}
 }
 
