@@ -130,16 +130,16 @@ func (s *TodoControllerTestSuite) TestUpdateTodo() {
         tc := tc
         s.Run(name, func() {
 			s.T().Parallel()
-            w := httptest.NewRecorder()
-            s.mock.On("UpdateTodo", int64(1), tc.todoRequest).Return(tc.wantTodoResponse, nil)
-            jsonValue, _ := json.Marshal(tc.todoRequest)
-            req, _ := http.NewRequest("PUT", "/todos/1", bytes.NewBuffer(jsonValue))
-            s.router.ServeHTTP(w, req)
-            body, _ := ioutil.ReadAll(w.Result().Body)
-            var response model.UpdateTodoResponse
-            json.Unmarshal(body, &response)
-            s.Equal(tc.wantStatusCode, w.Code)
-            s.Equal(tc.wantTodoResponse, response)
+			w := httptest.NewRecorder()
+			s.mock.On("UpdateTodo", int64(1), tc.todoRequest).Return(tc.wantTodoResponse, nil)
+			jsonValue, _ := json.Marshal(tc.todoRequest)
+			req, _ := http.NewRequest("PUT", "/todos/1", bytes.NewBuffer(jsonValue))
+			s.router.ServeHTTP(w, req)
+			body, _ := ioutil.ReadAll(w.Result().Body)
+			var response model.UpdateTodoResponse
+			json.Unmarshal(body, &response)
+			s.Equal(tc.wantStatusCode, w.Code)
+			s.Equal(tc.wantTodoResponse, response)
 		})
 	}
 }
