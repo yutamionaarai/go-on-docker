@@ -156,15 +156,15 @@ func (s *TodoControllerTestSuite) TestDeleteTodo() {
     for name, tc := range testCases {
         name := name
         tc := tc
-        s.Run(name, func() {
-			s.T().Parallel()
+		s.Run(name, func() {
+		    s.T().Parallel()
 			w := httptest.NewRecorder()
 			s.mock.On("DeleteTodo", int64(1)).Return(model.DeleteTodoResponse{}, nil)
 			req, _ := http.NewRequest("DELETE", "/todos/1", nil)
 			s.router.ServeHTTP(w, req)
 			s.Equal(tc.wantStatusCode, w.Code)
-        })
-    }
+		})
+	}
 }
 
 func TestTodoControllerTestSuite(t *testing.T) {
