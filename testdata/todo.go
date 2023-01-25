@@ -20,15 +20,15 @@ var Todo = &model.Todo{
 
 var Todos = []*model.Todo{
 	&model.Todo {
-	    ID: 1,
-	    Title: "title",
-	    Description: "Description",
-	    Status: "Status",
-	    Priority: 1,
-	    UserID: 1,
-	    ExpirationDate: &time.Time{},
-	    CreatedAT: time.Now(),
-	    UpdatedAt: time.Now(),
+		ID: 1,
+		Title: "title",
+		Description: "Description",
+		Status: "Status",
+		Priority: 1,
+		UserID: 1,
+		ExpirationDate: &time.Time{},
+		CreatedAT: time.Now(),
+		UpdatedAt: time.Now(),
 	},
 	&model.Todo{
 		ID: 2,
