@@ -31,7 +31,7 @@ type TodoRequest struct {
 }
 
 type FindTodoResponse struct {
-	Todo *Todo `json:"todos"`
+	Todo *Todo `json:"todo"`
 }
 
 type FindTodosResponse struct {

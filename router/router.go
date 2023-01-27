@@ -3,24 +3,16 @@ package router
 import (
 	"app/controller"
 	"app/controller/middleware"
-	"app/repository"
 
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // NewRouter implement various Endpoints.
-func NewRouter(db *gorm.DB) *gin.Engine {
+func NewRouter(todoController *controller.TodoController) *gin.Engine {
 	r := gin.Default()
 	r.Use(requestid.New())
-	todoController := controller.NewTodoController(
-		repository.NewTodoRepository(
-			db,
-		),
-	)
 	r.Use(middleware.HandleErrors)
-
 	todos := r.Group("/todos")
 	{
 		todos.GET("/hello", todoController.HelloController)
@@ -35,5 +27,6 @@ func NewRouter(db *gorm.DB) *gin.Engine {
 		// 該当のIDのtodoリストの削除
 		todos.DELETE("/:id", todoController.DeleteTodoController)
 	}
+
 	return r
 }

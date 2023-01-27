@@ -90,12 +90,12 @@ func (t *TodoController) UpdateTodoController(c *gin.Context) {
 	if err := todoRequest.TodoValidate(c); err != nil {
 		return
 	}
-	updateTodoRepsonse, err := t.repo.UpdateTodo(todoRequest, idInt64)
+	updateTodoResponse, err := t.repo.UpdateTodo(todoRequest, idInt64)
 	if err := t.handleErrorResponse(c, err); err != nil {
 		return
 	}
 	c.JSON(200, gin.H{
-		"data": updateTodoRepsonse,
+		"data": updateTodoResponse,
 	})
 }
 
@@ -105,8 +105,7 @@ func (t *TodoController) DeleteTodoController(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	todo := &model.Todo{}
-	deleteTodoResponse, err := t.repo.DeleteTodo(todo, idInt64)
+	deleteTodoResponse, err := t.repo.DeleteTodo(idInt64)
 	if err := t.handleErrorResponse(c, err); err != nil {
 		return
 	}
