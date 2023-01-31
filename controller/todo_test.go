@@ -94,17 +94,17 @@ func (s *TodoControllerTestSuite) TestCreateTodo() {
 			wantTodoResponse:    model.CreateTodoResponse{ID: 0},
 			wantTodoResponseErr: nil,
 		},
-		"異常系：モックからエラーが返された場合": {
-			todoRequest:         testdata.TodoRequest,
+		"異常系：Internal Server Error nilが送信された場合": {
+			todoRequest:         nil,
 			wantStatusCode:      http.StatusInternalServerError,
 			wantTodoResponse:    model.CreateTodoResponse{},
-			wantTodoResponseErr: fmt.Errorf("mock error"),
+			wantTodoResponseErr: fmt.Errorf("Internal Server Error"),
 		},
-		"異常系：不正なリクエストパラメータが送信された場合": {
-			todoRequest:         &model.TodoRequest{},
+		"異常系：Bad Request Error 不正なリクエストパラメータが送信された場合": {
+			todoRequest:         testdata.InvalidTodoRequest,
 			wantStatusCode:      http.StatusBadRequest,
 			wantTodoResponse:    model.CreateTodoResponse{},
-			wantTodoResponseErr: nil,
+			wantTodoResponseErr: fmt.Errorf("Bad Request Error"),
 		},
 	}
 	for name, tc := range testCases {
@@ -116,22 +116,22 @@ func (s *TodoControllerTestSuite) TestCreateTodo() {
 			w := httptest.NewRecorder()
 			jsonValue, err := json.Marshal(tc.todoRequest)
 			s.NoError(err)
-			err = tc.todoRequest.TodoValidate(&gin.Context{})
-			fmt.Print(err)
 			req, err := http.NewRequest("POST", "/todos/", bytes.NewBuffer(jsonValue))
-			fmt.Print(err)
+			s.NoError(err)
 			s.router.ServeHTTP(w, req)
-			if tc.wantTodoResponseErr == nil {
-				body, err := ioutil.ReadAll(w.Result().Body)
-				s.NoError(err)
-				var response model.CreateTodoResponse
-				json.Unmarshal(body, &response)
-				s.Equal(tc.wantTodoResponse, response)
+			s.Equal(tc.wantStatusCode, w.Code)
+			// Internal Server Errorの時は以降のテストは行わない
+			if tc.wantStatusCode == http.StatusInternalServerError {
+				return
 			}
+			body, err := ioutil.ReadAll(w.Result().Body)
+			s.NoError(err)
+			var response model.CreateTodoResponse
+			json.Unmarshal(body, &response)
+			s.Equal(tc.wantTodoResponse, response)
 		})
 	}
 }
-
 func (s *TodoControllerTestSuite) TestUpdateTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
@@ -166,7 +166,6 @@ func (s *TodoControllerTestSuite) TestUpdateTodo() {
 		})
 	}
 }
-
 func (s *TodoControllerTestSuite) TestDeleteTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
@@ -190,7 +189,6 @@ func (s *TodoControllerTestSuite) TestDeleteTodo() {
 		})
 	}
 }
-
 func TestTodoControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(TodoControllerTestSuite))
 }

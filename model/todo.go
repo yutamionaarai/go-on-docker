@@ -1,11 +1,12 @@
 package model
 
 import (
-	"errors"
 	"time"
+	
 
 	"github.com/gin-gonic/gin"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/pkg/errors"
 )
 
 // A Todo is ...

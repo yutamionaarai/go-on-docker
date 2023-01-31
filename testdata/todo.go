@@ -51,7 +51,5 @@ var TodoRequest = &model.TodoRequest{
 	UserID:         1,
 }
 
-var InvalidTodoRequest = &model.TodoRequest{
-	Description: "Description",
-	Priority:    1,
-}
+// カラムが不足
+var InvalidTodoRequest = &model.TodoRequest{Title: "Title"}
