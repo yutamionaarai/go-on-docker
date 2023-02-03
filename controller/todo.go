@@ -134,6 +134,7 @@ func convertStringIDToInt64(c *gin.Context, param string) (int64, error) {
 	id := c.Param(param)
 	idInt64, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
+		err := errors.New(err.Error())
 		c.Error(err).SetType(gin.ErrorTypePublic).SetMeta(404)
 		return 0, err
 	}

@@ -8,6 +8,7 @@ import (
 	"app/testdata"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,11 +18,10 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-
 type TodoControllerTestSuite struct {
-    suite.Suite
-    mock   *mock.TodoRepositoryMock
-    router *gin.Engine
+	suite.Suite
+	mock   *mock.TodoRepositoryMock
+	router *gin.Engine
 }
 
 func (s *TodoControllerTestSuite) SetupTest() {
@@ -31,7 +31,6 @@ func (s *TodoControllerTestSuite) SetupTest() {
 	)
 	s.router = router.NewRouter(todoController)
 }
-
 
 func (s *TodoControllerTestSuite) TestFindTodo() {
 	s.T().Parallel()
@@ -47,14 +46,14 @@ func (s *TodoControllerTestSuite) TestFindTodo() {
 		tc := tc
 		s.Run(name, func() {
 			s.T().Parallel()
-			s.mock.On("FindTodo", int64(1)).Return(model.FindTodoResponse{Todo:testdata.Todo}, nil)
+			s.mock.On("FindTodo", int64(1)).Return(model.FindTodoResponse{Todo: testdata.Todo}, nil)
 			w := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", "/todos/1", nil)
 			s.NoError(err)
 			s.router.ServeHTTP(w, req)
 			s.Equal(tc.wantStatusCode, w.Code)
-	    })
-    }
+		})
+	}
 }
 
 func (s *TodoControllerTestSuite) TestFindsTodo() {
@@ -84,49 +83,65 @@ func (s *TodoControllerTestSuite) TestFindsTodo() {
 func (s *TodoControllerTestSuite) TestCreateTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
-		todoRequest *model.TodoRequest
-		wantStatusCode int
-		wantTodoResponse model.CreateTodoResponse
+		todoRequest         *model.TodoRequest
+		wantStatusCode      int
+		wantTodoResponse    model.CreateTodoResponse
+		wantTodoResponseErr error
 	}{
 		"正常系データ": {
-			todoRequest: testdata.TodoRequest,
-			wantStatusCode: http.StatusOK,
-			wantTodoResponse: model.CreateTodoResponse{ID:0},
-	    },
+			todoRequest:         testdata.TodoRequest,
+			wantStatusCode:      http.StatusOK,
+			wantTodoResponse:    model.CreateTodoResponse{ID: 0},
+			wantTodoResponseErr: nil,
+		},
+		"異常系：Internal Server Error nilが送信された場合": {
+			todoRequest:         nil,
+			wantStatusCode:      http.StatusInternalServerError,
+			wantTodoResponse:    model.CreateTodoResponse{},
+			wantTodoResponseErr: fmt.Errorf("Internal Server Error"),
+		},
+		"異常系：Bad Request Error 不正なリクエストパラメータが送信された場合": {
+			todoRequest:         testdata.InvalidTodoRequest,
+			wantStatusCode:      http.StatusBadRequest,
+			wantTodoResponse:    model.CreateTodoResponse{},
+			wantTodoResponseErr: fmt.Errorf("Bad Request Error"),
+		},
 	}
 	for name, tc := range testCases {
 		name := name
 		tc := tc
 		s.Run(name, func() {
 			s.T().Parallel()
-			s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, nil)
+			s.mock.On("CreateTodo", tc.todoRequest).Return(tc.wantTodoResponse, tc.wantTodoResponseErr)
 			w := httptest.NewRecorder()
 			jsonValue, err := json.Marshal(tc.todoRequest)
 			s.NoError(err)
 			req, err := http.NewRequest("POST", "/todos/", bytes.NewBuffer(jsonValue))
 			s.NoError(err)
 			s.router.ServeHTTP(w, req)
+			s.Equal(tc.wantStatusCode, w.Code)
+			// Internal Server Errorの時は以降のテストは行わない
+			if tc.wantStatusCode == http.StatusInternalServerError {
+				return
+			}
 			body, err := ioutil.ReadAll(w.Result().Body)
 			s.NoError(err)
 			var response model.CreateTodoResponse
 			json.Unmarshal(body, &response)
-			s.Equal(tc.wantStatusCode, w.Code)
 			s.Equal(tc.wantTodoResponse, response)
 		})
 	}
 }
-
-
 func (s *TodoControllerTestSuite) TestUpdateTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
-		todoRequest *model.TodoRequest
-		wantStatusCode int
+		todoRequest      *model.TodoRequest
+		wantStatusCode   int
 		wantTodoResponse model.UpdateTodoResponse
 	}{
-    	"正常系データ": {
-			todoRequest: testdata.TodoRequest,
-			wantStatusCode: http.StatusOK,
+		"正常系データ": {
+			todoRequest:      testdata.TodoRequest,
+			wantStatusCode:   http.StatusOK,
 			wantTodoResponse: model.UpdateTodoResponse{ID: 0},
 		},
 	}
@@ -151,7 +166,6 @@ func (s *TodoControllerTestSuite) TestUpdateTodo() {
 		})
 	}
 }
-
 func (s *TodoControllerTestSuite) TestDeleteTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
@@ -175,7 +189,6 @@ func (s *TodoControllerTestSuite) TestDeleteTodo() {
 		})
 	}
 }
-
 func TestTodoControllerTestSuite(t *testing.T) {
-    suite.Run(t, new(TodoControllerTestSuite))
+	suite.Run(t, new(TodoControllerTestSuite))
 }
