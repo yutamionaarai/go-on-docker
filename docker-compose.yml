@@ -20,6 +20,26 @@ services:
       TZ: Asia/Tokyo
       PGTZ: Asia/Tokyo
 
+  test_db:
+    image: postgres:14
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - type: volume
+        source: test_db_data
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      TZ: Asia/Tokyo
+      PGTZ: Asia/Tokyo
+
   app:
     build:
       context: .
@@ -40,4 +60,5 @@ services:
 
 volumes:
   db_data:
+  test_db_data:
   app:
