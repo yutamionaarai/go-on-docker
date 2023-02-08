@@ -24,6 +24,9 @@ services:
     image: postgres:14
     ports:
       - "5436:5432"
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -49,6 +52,8 @@ services:
       - "8080:8080"
     depends_on:
       db:
+        condition: service_healthy
+      test_db:
         condition: service_healthy
     volumes:
       - type: bind
