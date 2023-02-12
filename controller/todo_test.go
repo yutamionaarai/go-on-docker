@@ -18,13 +18,13 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type TodoControllerTestSuite struct {
+type TodoControllerSuite struct {
 	suite.Suite
 	mock   *mock.TodoRepositoryMock
 	router *gin.Engine
 }
 
-func (s *TodoControllerTestSuite) SetupTest() {
+func (s *TodoControllerSuite) SetupTest() {
 	s.mock = new(mock.TodoRepositoryMock)
 	todoController := controller.NewTodoController(
 		s.mock,
@@ -32,7 +32,7 @@ func (s *TodoControllerTestSuite) SetupTest() {
 	s.router = router.NewRouter(todoController)
 }
 
-func (s *TodoControllerTestSuite) TestFindTodo() {
+func (s *TodoControllerSuite) TestFindTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
 		wantStatusCode int
@@ -56,7 +56,7 @@ func (s *TodoControllerTestSuite) TestFindTodo() {
 	}
 }
 
-func (s *TodoControllerTestSuite) TestFindsTodo() {
+func (s *TodoControllerSuite) TestFindsTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
 		wantStatusCode int
@@ -80,7 +80,7 @@ func (s *TodoControllerTestSuite) TestFindsTodo() {
 	}
 }
 
-func (s *TodoControllerTestSuite) TestCreateTodo() {
+func (s *TodoControllerSuite) TestCreateTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
 		todoRequest         *model.TodoRequest
@@ -132,7 +132,7 @@ func (s *TodoControllerTestSuite) TestCreateTodo() {
 		})
 	}
 }
-func (s *TodoControllerTestSuite) TestUpdateTodo() {
+func (s *TodoControllerSuite) TestUpdateTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
 		todoRequest      *model.TodoRequest
@@ -166,7 +166,7 @@ func (s *TodoControllerTestSuite) TestUpdateTodo() {
 		})
 	}
 }
-func (s *TodoControllerTestSuite) TestDeleteTodo() {
+func (s *TodoControllerSuite) TestDeleteTodo() {
 	s.T().Parallel()
 	testCases := map[string]struct {
 		wantStatusCode int
@@ -190,5 +190,5 @@ func (s *TodoControllerTestSuite) TestDeleteTodo() {
 	}
 }
 func TestTodoControllerTestSuite(t *testing.T) {
-	suite.Run(t, new(TodoControllerTestSuite))
+	suite.Run(t, new(TodoControllerSuite))
 }
