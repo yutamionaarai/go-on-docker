@@ -49,7 +49,7 @@ func (s *TodoRepositorySuite) TearDownTest() {
 }
 
 // 次のタスクで改良していく箇所
-func (s *TodoRepositorySuite) TestFindTodo() {
+func (s *TodoRepositorySuite) TestForDB() {
 	// s.T().Parallel()
 	// testCases := map[string]struct {
 	// 	test string
