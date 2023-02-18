@@ -13,7 +13,7 @@ var Todo = &model.Todo{
 	Priority:       1,
 	UserID:         1,
 	ExpirationDate: &time.Time{},
-	CreatedAT:      time.Now(),
+	CreatedAt:      time.Now(),
 	UpdatedAt:      time.Now(),
 }
 
@@ -26,7 +26,7 @@ var Todos = []*model.Todo{
 		Priority:       1,
 		UserID:         1,
 		ExpirationDate: &time.Time{},
-		CreatedAT:      time.Now(),
+		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	},
 	&model.Todo{
@@ -37,7 +37,7 @@ var Todos = []*model.Todo{
 		Priority:       2,
 		UserID:         1,
 		ExpirationDate: &time.Time{},
-		CreatedAT:      time.Now(),
+		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	},
 }
@@ -53,3 +53,21 @@ var TodoRequest = &model.TodoRequest{
 
 // カラムが不足
 var InvalidTodoRequest = &model.TodoRequest{Title: "Title"}
+
+// FindTodo関数の正常のレスポンス
+var expirationDate = time.Date(2023, 12, 25, 3, 0, 0, 0, time.UTC)
+var FindTodoRes = model.FindTodoResponse{
+	Todo: &model.Todo{
+		ID:             1,
+		UserID:         1,
+		Title:          "study",
+		Description:    "Go",
+		ExpirationDate: &expirationDate,
+		Status:         "pending",
+		Priority:       1,
+	},
+}
+
+var CreateTodoRes = model.CreateTodoResponse{
+	ID: 2,
+}

@@ -1,9 +1,15 @@
 package repository_test
 
 import (
+	"app/model"
+	"app/repository"
+	"app/testdata"
+	"fmt"
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -16,6 +22,7 @@ import (
 type TodoRepositorySuite struct {
 	suite.Suite
 	db *gorm.DB
+	repository repository.TodoRepository
 }
 
 func (s *TodoRepositorySuite) SetupSuite() {
@@ -38,49 +45,97 @@ func (s *TodoRepositorySuite) SetupTest() {
 		s.T().Fatal(err)
 	}
 	s.db = testDB
+	s.repository = repository.NewTodoRepository(s.db)
 }
 
 func (s *TodoRepositorySuite) TearDownTest() {
-	testDB, _ := s.db.DB()
-	err := testDB.Close()
+	testDB, err := s.db.DB()
+	if err != nil {
+		s.T().Fatal(err)
+	}
+	err = testDB.Close()
 	if err != nil {
 		s.T().Fatal(err)
 	}
 }
 
-// 次のタスクで改良していく箇所
-func (s *TodoRepositorySuite) TestForDB() {
-	// s.T().Parallel()
-	// testCases := map[string]struct {
-	// 	test string
-	// }{
-	// 	"次のタスクで使用する箇所": {
-	// 		test: "次のタスクで使用する箇所",
-	// 	},
-	// }
-	// for name, tc := range testCases {
-	// 	name := name
-	// 	tc := tc
-	// 	s.Run(name, func() {
-	// 		s.T().Parallel()
-	// 	})
-	// 	fmt.Print(s.db)
-	// 	fmt.Print(tc)
-	// 	// 検証のため
-	// 	todo := &model.Todo{
-	// 		UserID:         1,
-	// 		Title:          "a",
-	// 		Description:    "insert description",
-	// 		Status:         "pending",
-	// 		Priority:       1,
-	// 	}
-	// 	err := s.db.Omit("created_at", "updated_at").Save(todo).Error
-	// 	s.NoError(err)
-	// 	var get_todo model.Todo
-	// 	err = s.db.First(&get_todo, "title = ?", "a").Error
-	// 	s.NoError(err)
-	// 	fmt.Print(get_todo)
-	// }
+func (s *TodoRepositorySuite) TestFindTodo() {
+	s.T().Parallel()
+	testCases := map[string]struct {
+		wantID int64
+		// ただ構造体を比較するだけなのでポインタ型を使用しない
+		wantRes model.FindTodoResponse
+		wantErr error
+		ignoreFields []string
+	}{
+		"正常のデータ": {
+			wantID: 1,
+			wantRes: testdata.FindTodoRes,
+			wantErr: nil,
+			ignoreFields: []string{"CreatedAt", "UpdatedAt"},
+		},
+		"異常のデータ": {
+			wantID: 2,
+			wantRes: model.FindTodoResponse{},
+			wantErr: fmt.Errorf("record not found"),
+			ignoreFields: []string{},
+		},
+	}
+	for name, tc := range testCases {
+		name := name
+		tc := tc
+		s.Run(name, func() {
+			// このParallel()を削除すればgoroutineが複数起動しないため上手くいくが、waitGroupなどを実装し、goroutineが一つうまく行ったらDBをCloseする処理入れた方が良いのか?
+			// s.T().Parallel()
+			gotRes, gotErr := s.repository.FindTodo(tc.wantID)
+			fmt.Print(333)
+			s.Equal(tc.wantErr, gotErr)
+			if diff := cmp.Diff(gotRes, tc.wantRes, cmpopts.IgnoreFields(model.Todo{}, tc.ignoreFields...)); diff != "" {
+				s.T().Error("期待していない値です\n", diff)
+				return
+			}
+		})
+	}
+}
+
+func (s *TodoRepositorySuite) TestCreateTodo() {
+	s.T().Parallel()
+	testCases := map[string]struct {
+		wantReq *model.TodoRequest
+		wantRes model.CreateTodoResponse
+		wantErr error
+		ignoreFields []string
+	}{
+		"正常のデータ": {
+			wantReq: testdata.TodoRequest,
+			wantRes: testdata.CreateTodoRes,
+			wantErr: nil,
+			ignoreFields: []string{"CreatedAt", "UpdatedAt"},
+		},
+		// "異常のデータ": {
+		// 	wantReq: testdata.InvalidTodoRequest,
+		// 	wantRes: model.CreateTodoResponse{},
+		// 	wantErr: fmt.Errorf("record not found"),
+		// 	ignoreFields: []string{},
+		// },
+	}
+	for name, tc := range testCases {
+		name := name
+		tc := tc
+		s.Run(name, func() {
+			gotRes, gotErr := s.repository.CreateTodo(tc.wantReq)
+			fmt.Print(555)
+			fmt.Print(gotRes.ID)
+			s.Equal(tc.wantErr, gotErr)
+			got, gotErr := s.repository.FindTodo(gotRes.ID)
+			fmt.Print(got.Todo)
+
+		        // if diff := cmp.Diff(gotRes, tc.wantRes, cmpopts.IgnoreFields(model.Todo{}, tc.ignoreFields...)); diff != "" {
+			    //     s.T().Error("期待していない値です\n", diff)
+			    //     return
+		        // }
+		})
+	}
 }
 
 func TestTodoRepositorySuite(t *testing.T) {
