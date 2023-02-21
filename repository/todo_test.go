@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+// Todo: 全体的にテストとテストデータを整える
 type TodoRepositorySuite struct {
 	suite.Suite
 	db *gorm.DB
@@ -60,17 +61,15 @@ func (s *TodoRepositorySuite) TearDownTest() {
 }
 
 func (s *TodoRepositorySuite) TestFindTodo() {
-	s.T().Parallel()
 	testCases := map[string]struct {
 		wantID int64
-		// ただ構造体を比較するだけなのでポインタ型を使用しない
 		wantRes model.FindTodoResponse
 		wantErr error
 		ignoreFields []string
 	}{
 		"正常のデータ": {
 			wantID: 1,
-			wantRes: testdata.FindTodoRes,
+			wantRes: testdata.FindTodoResponse,
 			wantErr: nil,
 			ignoreFields: []string{"CreatedAt", "UpdatedAt"},
 		},
@@ -85,10 +84,7 @@ func (s *TodoRepositorySuite) TestFindTodo() {
 		name := name
 		tc := tc
 		s.Run(name, func() {
-			// このParallel()を削除すればgoroutineが複数起動しないため上手くいくが、waitGroupなどを実装し、goroutineが一つうまく行ったらDBをCloseする処理入れた方が良いのか?
-			// s.T().Parallel()
 			gotRes, gotErr := s.repository.FindTodo(tc.wantID)
-			fmt.Print(333)
 			s.Equal(tc.wantErr, gotErr)
 			if diff := cmp.Diff(gotRes, tc.wantRes, cmpopts.IgnoreFields(model.Todo{}, tc.ignoreFields...)); diff != "" {
 				s.T().Error("期待していない値です\n", diff)
@@ -99,41 +95,45 @@ func (s *TodoRepositorySuite) TestFindTodo() {
 }
 
 func (s *TodoRepositorySuite) TestCreateTodo() {
-	s.T().Parallel()
 	testCases := map[string]struct {
 		wantReq *model.TodoRequest
-		wantRes model.CreateTodoResponse
-		wantErr error
+		isCreatedResZero bool
+		wantCreateErr error
+		wantFindRes model.FindTodoResponse
+		wantFindErr error
 		ignoreFields []string
 	}{
 		"正常のデータ": {
-			wantReq: testdata.TodoRequest,
-			wantRes: testdata.CreateTodoRes,
-			wantErr: nil,
-			ignoreFields: []string{"CreatedAt", "UpdatedAt"},
+			wantReq: testdata.CreateTodoRequest,
+			isCreatedResZero: false,
+			wantCreateErr: nil,
+			wantFindRes: testdata.FindTodoResponse,
+			wantFindErr: nil,
+			ignoreFields: []string{"ID", "CreatedAt", "UpdatedAt"},
 		},
-		// "異常のデータ": {
-		// 	wantReq: testdata.InvalidTodoRequest,
-		// 	wantRes: model.CreateTodoResponse{},
-		// 	wantErr: fmt.Errorf("record not found"),
-		// 	ignoreFields: []string{},
-		// },
+		"異常のデータ": {
+			wantReq: testdata.InvalidCreateTodoRequest,
+			isCreatedResZero: true,
+			wantCreateErr: fmt.Errorf("record not found"),
+			wantFindRes: model.FindTodoResponse{},
+			wantFindErr: fmt.Errorf("record not found"),
+			ignoreFields: []string{},
+		},
 	}
 	for name, tc := range testCases {
 		name := name
 		tc := tc
 		s.Run(name, func() {
-			gotRes, gotErr := s.repository.CreateTodo(tc.wantReq)
-			fmt.Print(555)
-			fmt.Print(gotRes.ID)
-			s.Equal(tc.wantErr, gotErr)
-			got, gotErr := s.repository.FindTodo(gotRes.ID)
-			fmt.Print(got.Todo)
-
-		        // if diff := cmp.Diff(gotRes, tc.wantRes, cmpopts.IgnoreFields(model.Todo{}, tc.ignoreFields...)); diff != "" {
-			    //     s.T().Error("期待していない値です\n", diff)
-			    //     return
-		        // }
+			gotCreatedRes, gotCreateErr := s.repository.CreateTodo(tc.wantReq)
+			s.Equal(gotCreatedRes.ID == 0, tc.isCreatedResZero)
+			s.Equal(tc.wantCreateErr, gotCreateErr)
+			// CreateされたIDをのデータが正しいかの確認
+			gotFindRes, gotFindErr := s.repository.FindTodo(gotCreatedRes.ID)
+			s.Equal(tc.wantFindErr, gotFindErr)
+			if diff := cmp.Diff(gotFindRes, tc.wantFindRes, cmpopts.IgnoreFields(model.Todo{}, tc.ignoreFields...)); diff != "" {
+				s.T().Error("期待していない値です\n", diff)
+				return
+			}
 		})
 	}
 }
