@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// Todo: 全体的にテストとテストデータを整える
 type TodoRepositorySuite struct {
 	suite.Suite
 	db *gorm.DB
@@ -125,6 +124,7 @@ func (s *TodoRepositorySuite) TestCreateTodo() {
 		tc := tc
 		s.Run(name, func() {
 			gotCreatedRes, gotCreateErr := s.repository.CreateTodo(tc.wantReq)
+			// 返却値が0か否か
 			s.Equal(gotCreatedRes.ID == 0, tc.isCreatedResZero)
 			s.Equal(tc.wantCreateErr, gotCreateErr)
 			// CreateされたIDをのデータが正しいかの確認
