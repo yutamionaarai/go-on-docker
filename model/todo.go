@@ -2,7 +2,6 @@ package model
 
 import (
 	"time"
-	
 
 	"github.com/gin-gonic/gin"
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -18,7 +17,7 @@ type Todo struct {
 	Priority       int64      `json:"priority"`
 	ExpirationDate *time.Time `json:"expiration_date"`
 	UserID         int64      `json:"user_id"`
-	CreatedAT      time.Time  `json:"created_at"`
+	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
